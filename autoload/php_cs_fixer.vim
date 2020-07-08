@@ -82,6 +82,7 @@ fun! php_cs_fixer#fix(path, dry_run)
         endif
 	endif
 
+    let command .= ' --allow-risky=yes'
     let s:output = system(command)
 
     if a:dry_run != 1
