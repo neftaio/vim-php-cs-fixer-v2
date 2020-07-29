@@ -8,46 +8,19 @@ let g:php_cs_fixer_php_path = get(g:, 'php_cs_fixer_php_path', 'php')
 
 if exists('g:php_cs_fixer_path') && g:php_cs_fixer_path != ""
   let g:php_cs_fixer_command = g:php_cs_fixer_php_path.' '.g:php_cs_fixer_path.' fix'
-  let g:php_cs_fixer_version_command = g:php_cs_fixer_php_path.' '.g:php_cs_fixer_path.' --version'
 else
   if executable('php-cs-fixer')
     let g:php_cs_fixer_command = 'php-cs-fixer fix'
-    let g:php_cs_fixer_version_command = 'php-cs-fixer --version'
   else
     echoerr('php-cs-fixer not found and g:php_cs_fixer_path not set')
     finish
   end
 end
 
-" Check the php-cs-fixer version
-" Troubleshooting: if the error is "Failed loading ...xdebug.so" check php -i | grep php.ini, take a look at zend_extension="/usr/local/Cellar/php@7.3/7.3.19/pecl/20180731/xdebug.so"
-if (has('win32') || has('win64'))
-  let sxq_save = &shellxquote
-  set shellxquote&
-  let g:php_cs_fixer_version = strpart(matchstr(system(g:php_cs_fixer_version_command), '\d\+\.\d\+\.\d\+'), 0, 1)
-  let &shellxquote = sxq_save
-else
-  let g:php_cs_fixer_version = system(g:php_cs_fixer_version_command . " | sed -e 's/[^0-9.]*\\([0-9.]*\\).*/\\1/'")
-endif
-
-if g:php_cs_fixer_version >= 2
-  let g:php_cs_fixer_rules = get(g:, 'php_cs_fixer_rules', '@PSR2')
-else
-  let g:php_cs_fixer_level = get(g:, 'php_cs_fixer_level', 'symfony')
-endif
-
-if g:php_cs_fixer_version == 1
-  if exists('g:php_cs_fixer_config')
-    let g:php_cs_fixer_command = g:php_cs_fixer_command.' --config='.g:php_cs_fixer_config
-  endif
-endif
+let g:php_cs_fixer_rules = get(g:, 'php_cs_fixer_rules', '@PSR2')
 
 if exists('g:php_cs_fixer_config_file') && filereadable(g:php_cs_fixer_config_file)
-  if g:php_cs_fixer_version == 1
-    let g:php_cs_fixer_command = g:php_cs_fixer_command . ' --config-file=' . g:php_cs_fixer_config_file
-  else
     let g:php_cs_fixer_command = g:php_cs_fixer_command . ' --config=' . g:php_cs_fixer_config_file
-  endif
 endif
 
 if exists('g:php_cs_fixer_cache')
@@ -70,18 +43,8 @@ fun! php_cs_fixer#fix(path, dry_run)
     let command = command.' --dry-run'
   endif
 
-  if g:php_cs_fixer_version >= 2
-    if exists('g:php_cs_fixer_rules') && g:php_cs_fixer_rules != '@PSR2'
-      let command = command." --rules='".g:php_cs_fixer_rules."'"
-    endif
-  else
-    if exists('g:php_cs_fixer_level') && g:php_cs_fixer_level != 'all'
-      let command = command.' --level='.g:php_cs_fixer_level
-    endif
-
-    if exists('g:php_cs_fixer_fixers_list')
-      let command = command.' --fixers='.g:php_cs_fixer_fixers_list
-    endif
+  if exists('g:php_cs_fixer_rules') && g:php_cs_fixer_rules != '@PSR2'
+    let command = command." --rules='".g:php_cs_fixer_rules."'"
   endif
 
   let command .= ' --allow-risky=yes'
